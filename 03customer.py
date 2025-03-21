@@ -97,7 +97,6 @@ print('- '*40)
 fig,ax = plt.subplots(1,2,figsize=(12,5))
 sb.scatterplot(pca_df,x=0,y=1,hue='cluster',palette='Set1',ax=ax[0])
 
-
 for i in (pca_df ["cluster"].unique()):
     tmp = pca_df.loc[pca_df["cluster"] == i]
     plt.scatter(tmp[0], tmp[1])
@@ -106,5 +105,48 @@ plt.show()
 
 dfo = pd.read_csv(pathjoin)
 df_join = pd.concat([df,dfo],axis=1)
-print(df_join)
+ndf = df_join.groupby(['cluster','is_deleted'],
+                      as_index=False).count()[['cluster','is_deleted','customer_id']]
+
+print(ndf)
+print('- '*40)
+'''
+   cluster  is_deleted  customer_id
+0        0           0          791
+1        0           1          543
+2        1           1          771
+3        2           0         1231
+4        2           1           18
+5        3           0          820
+6        3           1           18
+'''
+
+de0 = ndf.is_deleted==0
+de1 = ndf.is_deleted==1
+
+print('탈퇴/지속회원 비율 계산')
+for i in range(4):
+  temp = ndf.cluster==i
+  cal = round((ndf.loc[(temp&de1),'customer_id'].sum() / ndf.loc[(temp),'customer_id'].sum())*100 ,2)
+  print(f'\nCluster {i}의 탈퇴회원 비율은 {cal}%')
+  print(f'Cluster {i}의 지속회원 비율은 {100-cal}%')
+
+'''
+클러스터 1: 탈퇴회원만 존재함
+클러스터 2, 3: 지속회원>> 탈퇴회원
+클러스터 0: 지속회원과 탈퇴회원 수 비슷
+
+Cluster 0의 탈퇴회원 비율은 40.7%
+Cluster 0의 지속회원 비율은 59.3%
+
+Cluster 1의 탈퇴회원 비율은 100.0%
+Cluster 1의 지속회원 비율은 0.0%
+
+Cluster 2의 탈퇴회원 비율은 1.44%
+Cluster 2의 지속회원 비율은 98.56%
+
+Cluster 3의 탈퇴회원 비율은 2.15%
+Cluster 3의 지속회원 비율은 97.85%
+'''
+
 print('='*80)
